@@ -313,6 +313,19 @@ void main() {
       expect(dolphin.nextCard()!.master, 'c');
     });
 
+    test('ties break deterministically by uniqueId', () {
+      final state = DRState({});
+      for (final id in ['zeta', 'alpha', 'mid']) {
+        state.cardStates['$id#0@1'] = LearningCardState(
+            master: id,
+            combination: combo01(),
+            consecutiveCorrect: 0,
+            lastReviewed: null);
+      }
+      final schedule = computeCardsSchedule(state, DateTime(2026, 1, 20));
+      expect(pickMostDue(schedule, state)!.id, 'alpha');
+    });
+
     test('empty schedule yields null', () {
       expect(pickMostDue(const CardsSchedule(later: [], due: [], overdue: [], learning: []), DRState(const {})), isNull);
     });

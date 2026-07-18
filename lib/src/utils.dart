@@ -101,40 +101,42 @@ String computeScheduleFromCardState(CardState state, DateTime? now) {
   throw Exception('Issue with mode and calculation of a cardState');
 }
 
+/// The next card to serve: the highest-priority non-empty bucket
+/// (learning, then overdue, then due — 'later' cards are never served),
+/// and within it the card least recently reviewed, with never-reviewed
+/// cards first and the uniqueId as a deterministic tie-break. A single
+/// O(n) scan: this runs on every nextCard() over buckets that can hold
+/// tens of thousands of cards, so no copying or sorting.
 CardId? pickMostDue(CardsSchedule? s, DRState? state) {
-  final scheduleKey = <String>['learning', 'overdue', 'due'];
-
-  for (var i = 0; i < scheduleKey.length; i++) {
-    final key = scheduleKey[i];
-    final propertyValue = s!.getPropertyValue(key)!;
-    if (propertyValue.isNotEmpty) {
-      final first = propertyValue.sublist(0);
-
-      first.sort((CardId a, CardId b) {
-        final cardA = state!.cardStates[a.uniqueId]!;
-        final cardB = state.cardStates[b.uniqueId];
-
-        final reviewDiff =
-            (cardA.lastReviewed == null && cardB!.lastReviewed != null)
-                ? 1
-                : (cardB!.lastReviewed == null && cardA.lastReviewed != null)
-                    ? -1
-                    : (cardA.lastReviewed == null && cardB.lastReviewed == null)
-                        ? 0
-                        : cardB.lastReviewed!.compareTo(cardA.lastReviewed!);
-
-        if (reviewDiff != 0) {
-          return -reviewDiff;
-        }
-        if (a == b) {
-          throw Exception('comparing duplicate id: $a');
-        }
-        return a.id!.compareTo(b.id!) == -1 ? 0 : 1;
-      });
-      return first[0];
+  for (final key in const ['learning', 'overdue', 'due']) {
+    final bucket = s!.getPropertyValue(key)!;
+    if (bucket.isEmpty) {
+      continue;
     }
+    var best = bucket.first;
+    var bestTs = state!.cardStates[best.uniqueId]!.lastReviewed;
+    for (var i = 1; i < bucket.length; i++) {
+      final candidate = bucket[i];
+      final candidateTs = state.cardStates[candidate.uniqueId]!.lastReviewed;
+      if (_isMoreDue(candidate, candidateTs, best, bestTs)) {
+        best = candidate;
+        bestTs = candidateTs;
+      }
+    }
+    return best;
   }
   return null;
+}
+
+bool _isMoreDue(CardId a, DateTime? aTs, CardId b, DateTime? bTs) {
+  if (aTs == null || bTs == null) {
+    if ((aTs == null) != (bTs == null)) {
+      return aTs == null;
+    }
+  } else if (!aTs.isAtSameMomentAs(bTs)) {
+    return aTs.isBefore(bTs);
+  }
+  return a.uniqueId!.compareTo(b.uniqueId!) < 0;
 }
 
 CardsSchedule computeCardsSchedule(DRState state, DateTime? now) {
