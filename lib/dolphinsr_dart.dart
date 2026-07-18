@@ -1,5 +1,7 @@
 library dolphinsr_dart;
 
+import 'dart:math' as math;
+
 import './src/exceptions.dart';
 import './src/models.dart';
 import './src/utils.dart';
@@ -40,22 +42,6 @@ class DolphinSR {
   int get skippedOutOfOrderReviews => _skippedOutOfOrderReviews;
   int _skippedOutOfOrderReviews = 0;
 
-  void _addMaster(Master master) {
-    if (_masters.containsKey(master.id)) {
-      throw DuplicateMasterException(master.id);
-    }
-
-    for (final combination in master.combinations!) {
-      final cardId =
-          CardId.fromCombination(combination: combination, master: master.id);
-
-      _state!.cardStates[cardId.uniqueId] =
-          makeInitialCardState(id: master.id, combination: combination);
-    }
-
-    _masters[master.id] = master;
-  }
-
   bool cardExistInMaster(String id) {
     return _masters.containsKey(id);
   }
@@ -73,10 +59,35 @@ class DolphinSR {
     _masters.remove(masterId);
   }
 
-  void addMasters(List<Master> masters) {
-    for (var i = 0; i < masters.length; i++) {
-      final master = masters[i];
-      _addMaster(master);
+  /// Register masters and create a fresh card per (master, combination).
+  ///
+  /// Card states live in an insertion-ordered map and [pickMostDue] breaks
+  /// ties by position, so the insertion order here IS the order fresh cards
+  /// are served in. With [shuffleCardOrder] the cards (not just the
+  /// masters) are shuffled before insertion — pass a seeded [random] to get
+  /// the same order back when rebuilding an instance mid-session. This
+  /// replaces the old trick of seeding every card with a synthetic review
+  /// at a staggered timestamp just to randomize the draw order.
+  void addMasters(List<Master> masters,
+      {bool shuffleCardOrder = false, math.Random? random}) {
+    final cards = <(Master, Combination)>[];
+    for (final master in masters) {
+      if (_masters.containsKey(master.id)) {
+        throw DuplicateMasterException(master.id);
+      }
+      _masters[master.id] = master;
+      for (final combination in master.combinations!) {
+        cards.add((master, combination));
+      }
+    }
+    if (shuffleCardOrder) {
+      cards.shuffle(random ?? math.Random());
+    }
+    for (final (master, combination) in cards) {
+      final cardId =
+          CardId.fromCombination(combination: combination, master: master.id);
+      _state!.cardStates[cardId.uniqueId] =
+          makeInitialCardState(id: master.id, combination: combination);
     }
     _invalidateSchedule();
   }

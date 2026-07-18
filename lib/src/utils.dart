@@ -104,9 +104,11 @@ String computeScheduleFromCardState(CardState state, DateTime? now) {
 /// The next card to serve: the highest-priority non-empty bucket
 /// (learning, then overdue, then due — 'later' cards are never served),
 /// and within it the card least recently reviewed, with never-reviewed
-/// cards first and the uniqueId as a deterministic tie-break. A single
-/// O(n) scan: this runs on every nextCard() over buckets that can hold
-/// tens of thousands of cards, so no copying or sorting.
+/// cards first. Ties keep the earliest card in bucket order, which is the
+/// card-state insertion order — that's what makes the insertion order set
+/// by DolphinSR.addMasters (optionally shuffled) the draw order for fresh
+/// cards. A single O(n) scan: this runs on every nextCard() over buckets
+/// that can hold tens of thousands of cards, so no copying or sorting.
 CardId? pickMostDue(CardsSchedule? s, DRState? state) {
   for (final key in const ['learning', 'overdue', 'due']) {
     final bucket = s!.getPropertyValue(key)!;
@@ -118,7 +120,7 @@ CardId? pickMostDue(CardsSchedule? s, DRState? state) {
     for (var i = 1; i < bucket.length; i++) {
       final candidate = bucket[i];
       final candidateTs = state.cardStates[candidate.uniqueId]!.lastReviewed;
-      if (_isMoreDue(candidate, candidateTs, best, bestTs)) {
+      if (_isMoreDue(candidateTs, bestTs)) {
         best = candidate;
         bestTs = candidateTs;
       }
@@ -128,15 +130,13 @@ CardId? pickMostDue(CardsSchedule? s, DRState? state) {
   return null;
 }
 
-bool _isMoreDue(CardId a, DateTime? aTs, CardId b, DateTime? bTs) {
+/// Strictly more due: never-reviewed beats reviewed, older beats newer,
+/// and a tie is NOT more due (so the earlier card in the bucket wins).
+bool _isMoreDue(DateTime? aTs, DateTime? bTs) {
   if (aTs == null || bTs == null) {
-    if ((aTs == null) != (bTs == null)) {
-      return aTs == null;
-    }
-  } else if (!aTs.isAtSameMomentAs(bTs)) {
-    return aTs.isBefore(bTs);
+    return aTs == null && bTs != null;
   }
-  return a.uniqueId!.compareTo(b.uniqueId!) < 0;
+  return aTs.isBefore(bTs);
 }
 
 CardsSchedule computeCardsSchedule(DRState state, DateTime? now) {

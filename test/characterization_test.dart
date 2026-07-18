@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:dolphinsr_dart/dolphinsr_dart.dart';
 import 'package:dolphinsr_dart/src/utils.dart';
 import 'package:test/test.dart';
@@ -313,7 +314,7 @@ void main() {
       expect(dolphin.nextCard()!.master, 'c');
     });
 
-    test('ties break deterministically by uniqueId', () {
+    test('ties break by insertion order', () {
       final state = DRState({});
       for (final id in ['zeta', 'alpha', 'mid']) {
         state.cardStates['$id#0@1'] = LearningCardState(
@@ -323,7 +324,49 @@ void main() {
             lastReviewed: null);
       }
       final schedule = computeCardsSchedule(state, DateTime(2026, 1, 20));
-      expect(pickMostDue(schedule, state)!.id, 'alpha');
+      expect(pickMostDue(schedule, state)!.id, 'zeta');
+    });
+
+    test('shuffleCardOrder with the same seed reproduces the same order',
+        () {
+      List<String> drawAll(DolphinSR d) {
+        final out = <String>[];
+        // Rate each served card Again "now" so it moves behind the
+        // remaining fresh cards and every card gets served once.
+        var ts = DateTime(2026, 1, 20);
+        for (var i = 0; i < 6; i++) {
+          final card = d.nextCard()!;
+          out.add('${card.master}/${card.combination!.front!.first}');
+          d.addReviews([
+            Review(
+                master: card.master,
+                combination: card.combination,
+                ts: ts = ts.add(const Duration(seconds: 1)),
+                rating: Rating.Again)
+          ]);
+        }
+        return out;
+      }
+
+      DolphinSR build(int seed) {
+        final d = DolphinSR(now: () => DateTime(2026, 1, 20));
+        d.addMasters([
+          for (final id in ['a', 'b', 'c'])
+            Master(id: id, fields: const [
+              'f',
+              'b'
+            ], combinations: [
+              const Combination(front: [0], back: [1]),
+              const Combination(front: [1], back: [0]),
+            ])
+        ], shuffleCardOrder: true, random: math.Random(seed));
+        return d;
+      }
+
+      final first = drawAll(build(42));
+      final second = drawAll(build(42));
+      expect(second, first);
+      expect(first.toSet().length, 6, reason: 'every card served once');
     });
 
     test('empty schedule yields null', () {
