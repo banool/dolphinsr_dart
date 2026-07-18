@@ -29,37 +29,41 @@ const int MAX_INTERVAL = 365;
 const int MIN_FACTOR = 0;
 const int MAX_FACTOR = 2147483647;
 
-CardState? applyToLearningCardState(
-    LearningCardState prev, DateTime? ts, Rating? rating) {
-  if (rating == Rating.Easy ||
-      (rating == Rating.Easy || rating == Rating.Good) &&
-          prev.consecutiveCorrect! > 0) {
-    final interval = prev.consecutiveCorrect! > 0
-        ? INITIAL_DAYS_WITHOUT_JUMP
-        : INITIAL_DAYS_WITH_JUMP;
-    return ReviewingCardState(
-        master: prev.master,
-        combination: prev.combination,
-        factor: INITIAL_FACTOR,
-        lapses: 0,
-        interval: interval.toDouble(),
-        lastReviewed: ts);
-  } else if (rating == Rating.Again || rating == Rating.Hard) {
-    return LearningCardState(
-        master: prev.master,
-        combination: prev.combination,
-        consecutiveCorrect: 0,
-        lastReviewed: ts);
-  } else if ((rating == Rating.Good) && prev.consecutiveCorrect! < 1) {
-    return LearningCardState(
-        master: prev.master,
-        combination: prev.combination,
-        consecutiveCorrect: prev.consecutiveCorrect! + 1,
-        lastReviewed: ts);
+CardState applyToLearningCardState(
+    LearningCardState prev, DateTime? ts, Rating rating) {
+  switch (rating) {
+    case Rating.Again:
+    case Rating.Hard:
+      return LearningCardState(
+          master: prev.master,
+          combination: prev.combination,
+          consecutiveCorrect: 0,
+          lastReviewed: ts);
+    case Rating.Good:
+      if (prev.consecutiveCorrect! < 1) {
+        return LearningCardState(
+            master: prev.master,
+            combination: prev.combination,
+            consecutiveCorrect: prev.consecutiveCorrect! + 1,
+            lastReviewed: ts);
+      }
+      return _graduateFromLearning(prev, ts);
+    case Rating.Easy:
+      return _graduateFromLearning(prev, ts);
   }
+}
 
-  // TODO(JobiJoba): Should return an error state.
-  return null;
+ReviewingCardState _graduateFromLearning(LearningCardState prev, DateTime? ts) {
+  final interval = prev.consecutiveCorrect! > 0
+      ? INITIAL_DAYS_WITHOUT_JUMP
+      : INITIAL_DAYS_WITH_JUMP;
+  return ReviewingCardState(
+      master: prev.master,
+      combination: prev.combination,
+      factor: INITIAL_FACTOR,
+      lapses: 0,
+      interval: interval.toDouble(),
+      lastReviewed: ts);
 }
 
 double constrainWithin(double min, num max, double n) {
@@ -247,13 +251,13 @@ CardState applyToLapsedCardState(
           rating == Rating.Again ? 0 : prev.consecutiveCorrect! + 1);
 }
 
-CardState? applyToCardState(CardState prev, DateTime? ts, Rating? rating) {
+CardState applyToCardState(CardState prev, DateTime? ts, Rating? rating) {
   if (prev.lastReviewed != null && prev.lastReviewed!.isAfter(ts!)) {
     throw 'Cannot apply review before current lastReviewed';
   }
 
   if (prev.mode == 'learning') {
-    return applyToLearningCardState(prev as LearningCardState, ts, rating);
+    return applyToLearningCardState(prev as LearningCardState, ts, rating!);
   } else if (prev.mode == 'reviewing') {
     return applyToReviewingCardState(prev as ReviewingCardState, ts, rating);
   } else if (prev.mode == 'lapsed') {

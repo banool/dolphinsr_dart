@@ -9,7 +9,7 @@ import 'package:test/test.dart';
 Combination combo01() => const Combination(front: [0], back: [1]);
 
 LearningCardState freshCard(String id) =>
-    makeInitialCardState(id: id, combination: combo01()) as LearningCardState;
+    makeInitialCardState(id: id, combination: combo01());
 
 Review reviewFor(String id, DateTime ts, Rating rating) =>
     Review(master: id, combination: combo01(), ts: ts, rating: rating);
@@ -25,26 +25,26 @@ void main() {
         lastReviewed: null);
 
     test('Again resets consecutiveCorrect, stays learning', () {
-      final next = applyToCardState(learning(1), t0, Rating.Again)!;
+      final next = applyToCardState(learning(1), t0, Rating.Again);
       expect(next, isA<LearningCardState>());
       expect((next as LearningCardState).consecutiveCorrect, 0);
       expect(next.lastReviewed, t0);
     });
 
     test('Hard resets consecutiveCorrect, stays learning', () {
-      final next = applyToCardState(learning(1), t0, Rating.Hard)!;
+      final next = applyToCardState(learning(1), t0, Rating.Hard);
       expect(next, isA<LearningCardState>());
       expect((next as LearningCardState).consecutiveCorrect, 0);
     });
 
     test('Good on a first-time card increments consecutiveCorrect', () {
-      final next = applyToCardState(learning(0), t0, Rating.Good)!;
+      final next = applyToCardState(learning(0), t0, Rating.Good);
       expect(next, isA<LearningCardState>());
       expect((next as LearningCardState).consecutiveCorrect, 1);
     });
 
     test('Good after one correct graduates to reviewing at 4 days', () {
-      final next = applyToCardState(learning(1), t0, Rating.Good)!;
+      final next = applyToCardState(learning(1), t0, Rating.Good);
       expect(next, isA<ReviewingCardState>());
       final r = next as ReviewingCardState;
       expect(r.factor, 2500);
@@ -54,13 +54,13 @@ void main() {
     });
 
     test('Easy on a first-time card jump-graduates at 1 day', () {
-      final next = applyToCardState(learning(0), t0, Rating.Easy)!;
+      final next = applyToCardState(learning(0), t0, Rating.Easy);
       expect(next, isA<ReviewingCardState>());
       expect((next as ReviewingCardState).interval, 1.0);
     });
 
     test('Easy after one correct graduates at 4 days', () {
-      final next = applyToCardState(learning(1), t0, Rating.Easy)!;
+      final next = applyToCardState(learning(1), t0, Rating.Easy);
       expect(next, isA<ReviewingCardState>());
       expect((next as ReviewingCardState).interval, 4.0);
     });
@@ -83,7 +83,7 @@ void main() {
     final onTime = DateTime(2026, 1, 14, 3, 30);
 
     test('Again lapses: factor -200, lapses +1, interval kept', () {
-      final next = applyToCardState(reviewing(), onTime, Rating.Again)!;
+      final next = applyToCardState(reviewing(), onTime, Rating.Again);
       expect(next, isA<LapsedCardState>());
       final l = next as LapsedCardState;
       expect(l.factor, 2300);
@@ -94,21 +94,21 @@ void main() {
     });
 
     test('Good on time: interval * factor/1000, factor unchanged', () {
-      final next = applyToCardState(reviewing(), onTime, Rating.Good)!;
+      final next = applyToCardState(reviewing(), onTime, Rating.Good);
       final r = next as ReviewingCardState;
       expect(r.interval, 10.0); // (4 + 0/2) * 2500/1000
       expect(r.factor, 2500);
     });
 
     test('Hard on time: interval * 1.2 floored at prev+1, factor -150', () {
-      final next = applyToCardState(reviewing(), onTime, Rating.Hard)!;
+      final next = applyToCardState(reviewing(), onTime, Rating.Hard);
       final r = next as ReviewingCardState;
       expect(r.interval, 5.0); // (4 + 0/4) * 1.2 = 4.8, floored at 4+1
       expect(r.factor, 2350);
     });
 
     test('Easy on time: doubled via EASY_BONUS, factor +150', () {
-      final next = applyToCardState(reviewing(), onTime, Rating.Easy)!;
+      final next = applyToCardState(reviewing(), onTime, Rating.Easy);
       final r = next as ReviewingCardState;
       expect(r.interval, 20.0); // ((4 + 0) * 2500/1000) * 2
       expect(r.factor, 2650);
@@ -117,7 +117,7 @@ void main() {
     test('reviewing late grows the Good interval by half the delay', () {
       // 2 days late: (4 + 2/2) * 2500/1000 = 12.5.
       final twoDaysLate = DateTime(2026, 1, 16, 3, 30);
-      final next = applyToCardState(reviewing(), twoDaysLate, Rating.Good)!;
+      final next = applyToCardState(reviewing(), twoDaysLate, Rating.Good);
       expect((next as ReviewingCardState).interval, 12.5);
     });
 
@@ -125,7 +125,7 @@ void main() {
       final next = applyToCardState(
           reviewing(interval: 300),
           DateTime(2026, 11, 6, 3, 30), // its due date (300 days later)
-          Rating.Good)!;
+          Rating.Good);
       expect((next as ReviewingCardState).interval, 365.0);
     });
   });
@@ -141,7 +141,7 @@ void main() {
         lastReviewed: t0);
 
     test('Easy requalifies immediately at 1 day, keeping factor/lapses', () {
-      final next = applyToCardState(lapsed(), t0, Rating.Easy)!;
+      final next = applyToCardState(lapsed(), t0, Rating.Easy);
       expect(next, isA<ReviewingCardState>());
       final r = next as ReviewingCardState;
       expect(r.interval, 1.0);
@@ -151,26 +151,26 @@ void main() {
 
     test('Good after one correct requalifies at 4 days', () {
       final next = applyToCardState(lapsed(consecutiveCorrect: 1), t0,
-          Rating.Good)!;
+          Rating.Good);
       expect(next, isA<ReviewingCardState>());
       expect((next as ReviewingCardState).interval, 4.0);
     });
 
     test('Good on a fresh lapse stays lapsed, counts one correct', () {
-      final next = applyToCardState(lapsed(), t0, Rating.Good)!;
+      final next = applyToCardState(lapsed(), t0, Rating.Good);
       expect(next, isA<LapsedCardState>());
       expect((next as LapsedCardState).consecutiveCorrect, 1);
     });
 
     test('Again stays lapsed and resets the count', () {
       final next =
-          applyToCardState(lapsed(consecutiveCorrect: 1), t0, Rating.Again)!;
+          applyToCardState(lapsed(consecutiveCorrect: 1), t0, Rating.Again);
       expect(next, isA<LapsedCardState>());
       expect((next as LapsedCardState).consecutiveCorrect, 0);
     });
 
     test('CURRENT BEHAVIOR: Hard while lapsed counts toward requalifying', () {
-      final next = applyToCardState(lapsed(), t0, Rating.Hard)!;
+      final next = applyToCardState(lapsed(), t0, Rating.Hard);
       expect(next, isA<LapsedCardState>());
       expect((next as LapsedCardState).consecutiveCorrect, 1);
     });
