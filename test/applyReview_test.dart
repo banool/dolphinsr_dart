@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:dolphinsr_dart/src/exceptions.dart';
 import 'package:dolphinsr_dart/src/models.dart';
 import 'package:dolphinsr_dart/src/utils.dart';
 import 'package:test/test.dart';
@@ -36,7 +37,7 @@ void main() {
     var review = Review(
         master: id, combination: combination, ts: today, rating: Rating.Easy);
 
-    expect(() => applyReview(state, review), throwsA(startsWith('appl')));
+    expect(() => applyReview(state, review), throwsA(isA<UnknownCardException>()));
   });
 
   test(
@@ -61,7 +62,7 @@ void main() {
     applyReview(state, reviewLater);
 
     expect(() => applyReview(state, reviewToday),
-        throwsA(startsWith('Cannot apply review before current lastReviewed')));
+        throwsA(isA<OutOfOrderReviewException>()));
   });
 
   test(

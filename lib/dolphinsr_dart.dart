@@ -1,11 +1,15 @@
 library dolphinsr_dart;
 
+import './src/exceptions.dart';
 import './src/models.dart';
 import './src/utils.dart';
+export './src/exceptions.dart';
 export './src/models.dart';
 
 class DolphinSR {
-  DolphinSR({this.currentDateGetter}) {
+  DolphinSR(
+      {this.currentDateGetter,
+      this.outOfOrderReviewPolicy = OutOfOrderReviewPolicy.throwError}) {
     _state = makeEmptyState();
     _masters = <String?, Master>{};
     currentDateGetter ??= DateTime.now();
@@ -16,11 +20,16 @@ class DolphinSR {
   CardsSchedule? _cachedCardsSchedule;
   DateTime? currentDateGetter;
 
+  final OutOfOrderReviewPolicy outOfOrderReviewPolicy;
+
+  /// How many reviews [addReviews] has dropped under
+  /// [OutOfOrderReviewPolicy.skip], for callers that want to log it.
+  int get skippedOutOfOrderReviews => _skippedOutOfOrderReviews;
+  int _skippedOutOfOrderReviews = 0;
+
   void _addMaster(Master master) {
-    if (_masters.isNotEmpty) {
-      if (_masters.containsKey(master.id)) {
-        throw Exception('Already added masters');
-      }
+    if (_masters.containsKey(master.id)) {
+      throw DuplicateMasterException(master.id);
     }
 
     for (final combination in master.combinations!) {
@@ -61,7 +70,14 @@ class DolphinSR {
 
   void addReviews(List<Review> reviews) {
     for (final review in reviews) {
-      applyReview(_state!, review);
+      try {
+        applyReview(_state!, review);
+      } on OutOfOrderReviewException {
+        if (outOfOrderReviewPolicy == OutOfOrderReviewPolicy.throwError) {
+          rethrow;
+        }
+        _skippedOutOfOrderReviews++;
+      }
     }
     _cachedCardsSchedule = null;
   }

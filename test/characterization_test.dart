@@ -346,13 +346,13 @@ void main() {
       final master =
           Master(id: 'a', fields: const ['f', 'b'], combinations: [combo01()]);
       dolphin.addMasters([master]);
-      expect(() => dolphin.addMasters([master]), throwsException);
+      expect(() => dolphin.addMasters([master]), throwsA(isA<DuplicateMasterException>()));
     });
 
     test('review for an unknown card throws', () {
       final dolphin = DolphinSR();
       expect(() => dolphin.addReviews([reviewFor('ghost', t0, Rating.Good)]),
-          throwsA(isA<String>()));
+          throwsA(isA<UnknownCardException>()));
     });
 
     test('out-of-order review throws', () {
@@ -364,7 +364,34 @@ void main() {
       expect(
           () => dolphin.addReviews(
               [reviewFor('a', t0.subtract(const Duration(days: 1)), Rating.Good)]),
-          throwsA(isA<String>()));
+          throwsA(isA<OutOfOrderReviewException>()));
+    });
+  });
+
+  group('OutOfOrderReviewPolicy.skip', () {
+    test('drops only the offending reviews, counts them, applies the rest',
+        () {
+      final dolphin = DolphinSR(
+          currentDateGetter: DateTime(2026, 1, 20),
+          outOfOrderReviewPolicy: OutOfOrderReviewPolicy.skip);
+      dolphin.addMasters([
+        for (final id in ['a', 'b'])
+          Master(id: id, fields: const ['f', 'b'], combinations: [combo01()])
+      ]);
+      dolphin.addReviews([
+        reviewFor('a', DateTime(2026, 1, 5), Rating.Good),
+        // Out of order for 'a' — must be dropped without aborting the batch.
+        reviewFor('a', DateTime(2026, 1, 3), Rating.Again),
+        reviewFor('b', DateTime(2026, 1, 4), Rating.Good),
+      ]);
+      expect(dolphin.skippedOutOfOrderReviews, 1);
+      final byMaster = {
+        for (final c in dolphin.getAllCardState()) c.master: c.lastReviewed
+      };
+      // 'a' keeps the in-order review; the dropped Again didn't regress it.
+      expect(byMaster['a'], DateTime(2026, 1, 5));
+      // 'b', after the bad review, was still applied.
+      expect(byMaster['b'], DateTime(2026, 1, 4));
     });
   });
 }

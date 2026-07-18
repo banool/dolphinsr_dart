@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import './exceptions.dart';
 import './models.dart';
 
 List<Review> addReview(List<Review> reviews, Review review) {
@@ -253,7 +254,7 @@ CardState applyToLapsedCardState(
 
 CardState applyToCardState(CardState prev, DateTime? ts, Rating? rating) {
   if (prev.lastReviewed != null && prev.lastReviewed!.isAfter(ts!)) {
-    throw 'Cannot apply review before current lastReviewed';
+    throw OutOfOrderReviewException(prev.master, ts, prev.lastReviewed);
   }
 
   if (prev.mode == 'learning') {
@@ -273,7 +274,7 @@ void applyReview(DRState state, Review review) {
   final cardState = state.cardStates[cardId.uniqueId];
 
   if (cardState == null) {
-    throw '''applying review to missing card: ${review.master}''';
+    throw UnknownCardException(review.master);
   }
 
   state.cardStates[cardId.uniqueId] =
