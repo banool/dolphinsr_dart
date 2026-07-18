@@ -125,18 +125,12 @@ void main() {
       expect((next as ReviewingCardState).interval, 7.5);
     });
 
-    test('CURRENT BEHAVIOR: hitting the MAX_INTERVAL cap crashes', () {
-      // constrainWithin returns num; when the clamp picks the int
-      // MAX_INTERVAL the `as double?` cast throws. Any card mature enough
-      // to reach a 365-day interval kills the whole session build. Pinned
-      // here so the fix is a deliberate, visible change (it should cap at
-      // 365.0 instead of throwing).
-      expect(
-          () => applyToCardState(
-              reviewing(interval: 300),
-              DateTime(2026, 11, 6, 3, 30), // its due date (300 days later)
-              Rating.Good),
-          throwsA(isA<TypeError>()));
+    test('interval is capped at MAX_INTERVAL days', () {
+      final next = applyToCardState(
+          reviewing(interval: 300),
+          DateTime(2026, 11, 6, 3, 30), // its due date (300 days later)
+          Rating.Good)!;
+      expect((next as ReviewingCardState).interval, 365.0);
     });
   });
 

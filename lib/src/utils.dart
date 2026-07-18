@@ -62,8 +62,8 @@ CardState? applyToLearningCardState(
   return null;
 }
 
-num constrainWithin(double min, int max, double n) {
-  return math.max(math.min(n, max), min);
+double constrainWithin(double min, num max, double n) {
+  return math.max(math.min(n, max.toDouble()), min);
 }
 
 DateTime? calculateDueDate(CardState state) {
@@ -178,8 +178,8 @@ CardState applyToReviewingCardState(
         master: prev.master,
         combination: prev.combination,
         consecutiveCorrect: 0,
-        factor: constrainWithin(MIN_FACTOR.toDouble(), MAX_FACTOR,
-            prev.factor!.toDouble() - 200) as double?,
+        factor: constrainWithin(
+            MIN_FACTOR.toDouble(), MAX_FACTOR, prev.factor!.toDouble() - 200),
         lapses: prev.lapses! + 1,
         interval: prev.interval,
         lastReviewed: ts);
@@ -209,10 +209,9 @@ CardState applyToReviewingCardState(
       master: prev.master,
       combination: prev.combination,
       factor: constrainWithin(
-              MIN_FACTOR.toDouble(), MAX_FACTOR, prev.factor! + factorAdj)
-          as double?,
+          MIN_FACTOR.toDouble(), MAX_FACTOR, prev.factor! + factorAdj),
       lapses: prev.lapses,
-      interval: ival as double?,
+      interval: ival,
       lastReviewed: ts);
 }
 
