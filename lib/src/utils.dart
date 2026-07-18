@@ -71,17 +71,30 @@ double constrainWithin(double min, num max, double n) {
   return math.max(math.min(n, max.toDouble()), min);
 }
 
+/// The card is next due ceil(interval) calendar days after it was last
+/// reviewed, with the hour pinned to 3am (an Anki-style day boundary so
+/// "due today" flips over in the small hours, not mid-evening); minutes
+/// and below are kept from the review time so same-day cards keep a
+/// stable relative order. Day addition goes through DateTime's field
+/// normalization (day 35 rolls into the next month), which counts
+/// calendar days rather than 24h blocks and so stays stable across DST.
 DateTime? calculateDueDate(CardState state) {
-  final result = state.lastReviewed;
-  if (result == null || state.interval == null) return null;
+  final lastReviewed = state.lastReviewed;
+  final interval = state.interval;
+  if (lastReviewed == null || interval == null) {
+    return null;
+  }
 
-  const newHour = 3;
-  final newDay = result.day + state.interval!.ceil();
-  var newResult = result.toLocal();
-  newResult = DateTime(result.year, result.month, newDay, newHour,
-      result.minute, result.second, result.millisecond, result.microsecond);
-
-  return newResult;
+  const dueHour = 3;
+  return DateTime(
+      lastReviewed.year,
+      lastReviewed.month,
+      lastReviewed.day + interval.ceil(),
+      dueHour,
+      lastReviewed.minute,
+      lastReviewed.second,
+      lastReviewed.millisecond,
+      lastReviewed.microsecond);
 }
 
 String computeScheduleFromCardState(CardState state, DateTime? now) {
