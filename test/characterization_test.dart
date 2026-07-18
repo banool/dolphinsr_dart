@@ -114,15 +114,11 @@ void main() {
       expect(r.factor, 2650);
     });
 
-    test('CURRENT BEHAVIOR: reviewing late SHRINKS the Good interval', () {
-      // calculateDaysLate computes expected - actual, so a review 2 days
-      // after the due date yields daysLate = -2 and the interval formula
-      // (interval + daysLate/2) * factor/1000 gives (4 - 1) * 2.5 = 7.5
-      // instead of the (4 + 1) * 2.5 = 12.5 the algorithm intends. Pinned
-      // here so fixing the sign is a deliberate, visible change.
+    test('reviewing late grows the Good interval by half the delay', () {
+      // 2 days late: (4 + 2/2) * 2500/1000 = 12.5.
       final twoDaysLate = DateTime(2026, 1, 16, 3, 30);
       final next = applyToCardState(reviewing(), twoDaysLate, Rating.Good)!;
-      expect((next as ReviewingCardState).interval, 7.5);
+      expect((next as ReviewingCardState).interval, 12.5);
     });
 
     test('interval is capped at MAX_INTERVAL days', () {

@@ -163,10 +163,14 @@ double dateDiffInDays(DateTime a, DateTime b) {
   return (utc2.difference(utc1)).inMilliseconds / MS_PER_DAY;
 }
 
+/// Days between the card's due date and when it was actually reviewed:
+/// positive when the review happened after the due date. The interval
+/// formulas grow the next interval by a share of this (you remembered the
+/// card despite the extra delay), matching the upstream algorithm.
 double calculateDaysLate(ReviewingCardState state, DateTime actual) {
-  final excpected = calculateDueDate(state)!;
+  final expected = calculateDueDate(state)!;
 
-  final daysLate = dateDiffInDays(actual, excpected);
+  final daysLate = dateDiffInDays(expected, actual);
 
   return daysLate;
 }
