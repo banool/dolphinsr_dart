@@ -1,3 +1,17 @@
+## [4.0.0] - 19/07/2026
+Correctness, performance, and API overhaul (breaking).
+- Fix a TypeError crash when a card reaches the 365-day MAX_INTERVAL cap.
+- Fix inverted daysLate: late reviews now grow the next interval instead of shrinking it.
+- Typed exceptions (OutOfOrderReviewException, UnknownCardException, DuplicateMasterException) replace bare string throws.
+- New OutOfOrderReviewPolicy.skip drops just the offending review during addReviews (counted via skippedOutOfOrderReviews) instead of aborting the replay.
+- currentDateGetter (a DateTime captured at construction) is replaced by an injectable `now` function; the schedule follows the clock across days.
+- pickMostDue is a single O(n) scan (was copy + O(n log n) sort per nextCard) and ties break by card insertion order.
+- Reviews move their card between cached schedule buckets incrementally instead of invalidating the whole schedule per addReviews call.
+- addMasters gains shuffleCardOrder/random: fresh cards are served in (optionally shuffled) insertion order, replacing synthetic seed-review tricks.
+- Learning-state transitions are an exhaustive switch; applyToCardState returns non-null.
+- Removed the misnamed cardReviewedTodayLength/cardReviewedAtDateLength (they counted by due date and included never-reviewed cards).
+- Requires Dart 3.
+
 ## [3.0.1] - 14/03/2021
 Fix issue #7
 Update readme

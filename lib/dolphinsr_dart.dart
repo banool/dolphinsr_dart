@@ -229,20 +229,6 @@ class DolphinSR {
     return summary;
   }
 
-  int cardReviewedTodayLength() {
-    return cardReviewedAtDateLength(DateTime.now());
-  }
-
-  int cardReviewedAtDateLength(DateTime date) {
-    return _state!.cardStates.values.where((st) {
-      final dueDate = calculateDueDate(st!);
-      return dueDate == null ||
-          dueDate.year == date.year &&
-              dueDate.month == date.month &&
-              dueDate.day == date.day;
-    }).length;
-  }
-
   int cardsLength() {
     return _state!.cardStates.length;
   }
