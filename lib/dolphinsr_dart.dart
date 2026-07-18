@@ -24,6 +24,11 @@ class DolphinSR {
   /// valid within the day it was computed on.
   DateTime? _cachedScheduleAt;
 
+  /// Which bucket of [_cachedCardsSchedule] each card currently sits in
+  /// (by uniqueId), so a single review can move its card between buckets
+  /// without recomputing the whole schedule.
+  final Map<String, String> _cachedBucketOf = <String, String>{};
+
   /// The clock. Injectable for tests and long-lived instances; defaults to
   /// the real time so a session that spans midnight reschedules correctly.
   final DateTime Function() _now;
@@ -63,7 +68,7 @@ class DolphinSR {
           CardId.fromCombination(combination: combination, master: master.id);
       _state!.cardStates.remove(cardId.uniqueId);
     }
-    _cachedCardsSchedule = null;
+    _invalidateSchedule();
 
     _masters.remove(masterId);
   }
@@ -73,21 +78,50 @@ class DolphinSR {
       final master = masters[i];
       _addMaster(master);
     }
-    _cachedCardsSchedule = null;
+    _invalidateSchedule();
   }
 
   void addReviews(List<Review> reviews) {
     for (final review in reviews) {
       try {
         applyReview(_state!, review);
+        _moveCardInCachedSchedule(review);
       } on OutOfOrderReviewException {
         if (outOfOrderReviewPolicy == OutOfOrderReviewPolicy.throwError) {
+          _invalidateSchedule();
           rethrow;
         }
         _skippedOutOfOrderReviews++;
       }
     }
+  }
+
+  /// A review changes the bucket of exactly one card, so keep the cached
+  /// schedule alive by moving that card rather than recomputing all cards
+  /// on the next read (the recompute is O(cards) and runs after every
+  /// answered card in a session otherwise). No-op when nothing is cached.
+  void _moveCardInCachedSchedule(Review review) {
+    final cached = _cachedCardsSchedule;
+    if (cached == null) {
+      return;
+    }
+    final uniqueId = CardId.fromReview(review).uniqueId!;
+    final oldBucket = _cachedBucketOf[uniqueId];
+    if (oldBucket != null) {
+      cached.getPropertyValue(oldBucket)!.remove(CardId.fromReview(review));
+    }
+    final newState = _state!.cardStates[uniqueId]!;
+    // Bucket as of the cache's own day; if the day has rolled since, the
+    // next read rebuilds the whole schedule anyway.
+    final newBucket = computeScheduleFromCardState(newState, _cachedScheduleAt);
+    cached.getPropertyValue(newBucket)!.add(CardId.fromState(newState));
+    _cachedBucketOf[uniqueId] = newBucket;
+  }
+
+  void _invalidateSchedule() {
     _cachedCardsSchedule = null;
+    _cachedScheduleAt = null;
+    _cachedBucketOf.clear();
   }
 
   CardsSchedule _getCardsSchedule() {
@@ -100,8 +134,15 @@ class DolphinSR {
       return _cachedCardsSchedule!;
     }
 
-    _cachedCardsSchedule = computeCardsSchedule(_state!, nowValue);
+    final schedule = computeCardsSchedule(_state!, nowValue);
+    _cachedCardsSchedule = schedule;
     _cachedScheduleAt = nowValue;
+    _cachedBucketOf.clear();
+    for (final bucket in const ['later', 'due', 'overdue', 'learning']) {
+      for (final cardId in schedule.getPropertyValue(bucket)!) {
+        _cachedBucketOf[cardId.uniqueId!] = bucket;
+      }
+    }
     return _cachedCardsSchedule!;
   }
 

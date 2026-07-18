@@ -408,6 +408,38 @@ void main() {
     });
   });
 
+  group('incremental schedule cache', () {
+    test('warm-cache updates match a cold full recompute', () {
+      DolphinSR build() {
+        final d = DolphinSR(now: () => DateTime(2026, 1, 20));
+        d.addMasters([
+          for (final id in ['a', 'b', 'c'])
+            Master(id: id, fields: const ['f', 'b'], combinations: [combo01()])
+        ]);
+        return d;
+      }
+
+      final reviews = [
+        reviewFor('a', t0, Rating.Easy), // graduates, due Jan 11
+        reviewFor('b', t0, Rating.Good), // stays learning
+        reviewFor('a', DateTime(2026, 1, 11, 4), Rating.Again), // lapses
+      ];
+
+      // Warm the cache before and between every single-review add, so each
+      // add goes through the incremental card-move path.
+      final incremental = build();
+      incremental.summary();
+      for (final r in reviews) {
+        incremental.addReviews([r]);
+        incremental.summary();
+      }
+
+      final cold = build()..addReviews(reviews);
+      expect(incremental.summary(), cold.summary());
+      expect(incremental.nextCard(), cold.nextCard());
+    });
+  });
+
   group('clock handling', () {
     test('schedule follows the clock across days without new reviews', () {
       var fakeNow = DateTime(2026, 1, 10, 12);
