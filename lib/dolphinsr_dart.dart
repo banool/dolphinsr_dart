@@ -8,17 +8,25 @@ export './src/models.dart';
 
 class DolphinSR {
   DolphinSR(
-      {this.currentDateGetter,
-      this.outOfOrderReviewPolicy = OutOfOrderReviewPolicy.throwError}) {
+      {DateTime Function()? now,
+      this.outOfOrderReviewPolicy = OutOfOrderReviewPolicy.throwError})
+      : _now = now ?? DateTime.now {
     _state = makeEmptyState();
     _masters = <String?, Master>{};
-    currentDateGetter ??= DateTime.now();
   }
 
   DRState? _state;
   late Map<String?, Master> _masters;
   CardsSchedule? _cachedCardsSchedule;
-  DateTime? currentDateGetter;
+
+  /// When the cached schedule was computed. Bucket membership (later/due/
+  /// overdue) changes at calendar-day granularity, so the cache is only
+  /// valid within the day it was computed on.
+  DateTime? _cachedScheduleAt;
+
+  /// The clock. Injectable for tests and long-lived instances; defaults to
+  /// the real time so a session that spans midnight reschedules correctly.
+  final DateTime Function() _now;
 
   final OutOfOrderReviewPolicy outOfOrderReviewPolicy;
 
@@ -82,13 +90,19 @@ class DolphinSR {
     _cachedCardsSchedule = null;
   }
 
-  CardsSchedule? _getCardsSchedule() {
-    if (_cachedCardsSchedule != null) {
-      return _cachedCardsSchedule;
+  CardsSchedule _getCardsSchedule() {
+    final nowValue = _now();
+    if (_cachedCardsSchedule != null &&
+        _cachedScheduleAt != null &&
+        _cachedScheduleAt!.year == nowValue.year &&
+        _cachedScheduleAt!.month == nowValue.month &&
+        _cachedScheduleAt!.day == nowValue.day) {
+      return _cachedCardsSchedule!;
     }
 
-    _cachedCardsSchedule = computeCardsSchedule(_state!, currentDateGetter);
-    return _cachedCardsSchedule;
+    _cachedCardsSchedule = computeCardsSchedule(_state!, nowValue);
+    _cachedScheduleAt = nowValue;
+    return _cachedCardsSchedule!;
   }
 
   CardId? _nextCardId() {
@@ -153,7 +167,7 @@ class DolphinSR {
   }
 
   SummaryStatics summary() {
-    final s = _getCardsSchedule()!;
+    final s = _getCardsSchedule();
     final summary = SummaryStatics(
         later: s.later!.length,
         due: s.due!.length,

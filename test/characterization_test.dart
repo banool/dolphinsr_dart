@@ -256,7 +256,7 @@ void main() {
 
   group('pickMostDue selection order', () {
     test('learning bucket beats overdue and due', () {
-      final dolphin = DolphinSR(currentDateGetter: DateTime(2026, 1, 20));
+      final dolphin = DolphinSR(now: () => DateTime(2026, 1, 20));
       dolphin.addMasters([
         Master(id: 'overdue', fields: const ['f', 'b'], combinations: [
           combo01()
@@ -298,7 +298,7 @@ void main() {
       // This is how dictionarylib randomizes card order today: every card
       // gets a synthetic Again review at a distinct early timestamp, and
       // draws come out in timestamp order.
-      final dolphin = DolphinSR(currentDateGetter: DateTime(2026, 1, 20));
+      final dolphin = DolphinSR(now: () => DateTime(2026, 1, 20));
       final ids = ['c', 'a', 'b'];
       dolphin.addMasters([
         for (final id in ids)
@@ -320,7 +320,7 @@ void main() {
 
   group('DolphinSR end-to-end', () {
     test('summary tracks cards across buckets; cardsLength counts cards', () {
-      final dolphin = DolphinSR(currentDateGetter: DateTime(2026, 1, 10, 12));
+      final dolphin = DolphinSR(now: () => DateTime(2026, 1, 10, 12));
       dolphin.addMasters([
         for (final id in ['a', 'b', 'c'])
           Master(
@@ -372,7 +372,7 @@ void main() {
     test('drops only the offending reviews, counts them, applies the rest',
         () {
       final dolphin = DolphinSR(
-          currentDateGetter: DateTime(2026, 1, 20),
+          now: () => DateTime(2026, 1, 20),
           outOfOrderReviewPolicy: OutOfOrderReviewPolicy.skip);
       dolphin.addMasters([
         for (final id in ['a', 'b'])
@@ -392,6 +392,25 @@ void main() {
       expect(byMaster['a'], DateTime(2026, 1, 5));
       // 'b', after the bad review, was still applied.
       expect(byMaster['b'], DateTime(2026, 1, 4));
+    });
+  });
+
+  group('clock handling', () {
+    test('schedule follows the clock across days without new reviews', () {
+      var fakeNow = DateTime(2026, 1, 10, 12);
+      final dolphin = DolphinSR(now: () => fakeNow);
+      dolphin.addMasters([
+        Master(id: 'a', fields: const ['f', 'b'], combinations: [combo01()])
+      ]);
+      // Easy on a fresh card graduates at 1 day -> due Jan 11.
+      dolphin.addReviews([reviewFor('a', t0, Rating.Easy)]);
+      expect(dolphin.summary().later, 1);
+
+      fakeNow = DateTime(2026, 1, 11, 12);
+      expect(dolphin.summary().due, 1);
+
+      fakeNow = DateTime(2026, 1, 13, 12);
+      expect(dolphin.summary().overdue, 1);
     });
   });
 }

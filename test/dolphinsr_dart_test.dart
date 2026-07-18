@@ -98,7 +98,7 @@ void main() {
   });
 
   test('should add reviews', () {
-    var d = DolphinSR(currentDateGetter: today);
+    var d = DolphinSR(now: () => today);
     var id = generateId();
     var combination = Combination(front: [0], back: [1, 0]);
     var master =
