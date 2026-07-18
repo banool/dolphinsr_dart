@@ -60,8 +60,6 @@ void main() {
 
     applyReview(state, reviewLater);
 
-    applyReview(state, reviewToday);
-
     expect(() => applyReview(state, reviewToday),
         throwsA(startsWith('Cannot apply review before current lastReviewed')));
   });
