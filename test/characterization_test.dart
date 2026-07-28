@@ -151,8 +151,8 @@ void main() {
     });
 
     test('Good after one correct requalifies at 4 days', () {
-      final next = applyToCardState(lapsed(consecutiveCorrect: 1), t0,
-          Rating.Good);
+      final next =
+          applyToCardState(lapsed(consecutiveCorrect: 1), t0, Rating.Good);
       expect(next, isA<ReviewingCardState>());
       expect((next as ReviewingCardState).interval, 4.0);
     });
@@ -186,8 +186,8 @@ void main() {
           lapses: 0,
           interval: 4.4,
           lastReviewed: DateTime(2026, 1, 10, 8, 30, 12, 345, 678));
-      expect(calculateDueDate(state),
-          DateTime(2026, 1, 15, 3, 30, 12, 345, 678));
+      expect(
+          calculateDueDate(state), DateTime(2026, 1, 15, 3, 30, 12, 345, 678));
     });
 
     test('day overflow rolls into the next month', () {
@@ -259,12 +259,10 @@ void main() {
     test('learning bucket beats overdue and due', () {
       final dolphin = DolphinSR(now: () => DateTime(2026, 1, 20));
       dolphin.addMasters([
-        Master(id: 'overdue', fields: const ['f', 'b'], combinations: [
-          combo01()
-        ]),
-        Master(id: 'fresh', fields: const ['f', 'b'], combinations: [
-          combo01()
-        ]),
+        Master(
+            id: 'overdue', fields: const ['f', 'b'], combinations: [combo01()]),
+        Master(
+            id: 'fresh', fields: const ['f', 'b'], combinations: [combo01()]),
       ]);
       // Graduate 'overdue' so it becomes a reviewing card that is overdue
       // by Jan 20, while 'fresh' stays learning.
@@ -272,8 +270,7 @@ void main() {
       expect(dolphin.nextCard()!.master, 'fresh');
     });
 
-    test('within learning: never-reviewed first, then oldest lastReviewed',
-        () {
+    test('within learning: never-reviewed first, then oldest lastReviewed', () {
       final state = DRState({});
       for (final entry in {
         'oldest': DateTime(2026, 1, 1),
@@ -308,8 +305,8 @@ void main() {
       var ts = 1000000;
       dolphin.addReviews([
         for (final id in ids)
-          reviewFor(id, DateTime.fromMillisecondsSinceEpoch(ts += 1000),
-              Rating.Again)
+          reviewFor(
+              id, DateTime.fromMillisecondsSinceEpoch(ts += 1000), Rating.Again)
       ]);
       expect(dolphin.nextCard()!.master, 'c');
     });
@@ -327,8 +324,7 @@ void main() {
       expect(pickMostDue(schedule, state)!.id, 'zeta');
     });
 
-    test('shuffleCardOrder with the same seed reproduces the same order',
-        () {
+    test('shuffleCardOrder with the same seed reproduces the same order', () {
       List<String> drawAll(DolphinSR d) {
         final out = <String>[];
         // Rate each served card Again "now" so it moves behind the
@@ -370,7 +366,12 @@ void main() {
     });
 
     test('empty schedule yields null', () {
-      expect(pickMostDue(const CardsSchedule(later: [], due: [], overdue: [], learning: []), DRState(const {})), isNull);
+      expect(
+          pickMostDue(
+              const CardsSchedule(
+                  later: [], due: [], overdue: [], learning: []),
+              DRState(const {})),
+          isNull);
     });
   });
 
@@ -379,13 +380,13 @@ void main() {
       final dolphin = DolphinSR(now: () => DateTime(2026, 1, 10, 12));
       dolphin.addMasters([
         for (final id in ['a', 'b', 'c'])
-          Master(
-              id: id,
-              fields: const ['f', 'b'],
-              combinations: [
-                const Combination(front: [0], back: [1]),
-                const Combination(front: [1], back: [0]),
-              ])
+          Master(id: id, fields: const [
+            'f',
+            'b'
+          ], combinations: [
+            const Combination(front: [0], back: [1]),
+            const Combination(front: [1], back: [0]),
+          ])
       ]);
       expect(dolphin.cardsLength(), 6);
       expect(dolphin.summary(),
@@ -402,7 +403,8 @@ void main() {
       final master =
           Master(id: 'a', fields: const ['f', 'b'], combinations: [combo01()]);
       dolphin.addMasters([master]);
-      expect(() => dolphin.addMasters([master]), throwsA(isA<DuplicateMasterException>()));
+      expect(() => dolphin.addMasters([master]),
+          throwsA(isA<DuplicateMasterException>()));
     });
 
     test('review for an unknown card throws', () {
@@ -418,15 +420,16 @@ void main() {
       ]);
       dolphin.addReviews([reviewFor('a', t0, Rating.Good)]);
       expect(
-          () => dolphin.addReviews(
-              [reviewFor('a', t0.subtract(const Duration(days: 1)), Rating.Good)]),
+          () => dolphin.addReviews([
+                reviewFor(
+                    'a', t0.subtract(const Duration(days: 1)), Rating.Good)
+              ]),
           throwsA(isA<OutOfOrderReviewException>()));
     });
   });
 
   group('OutOfOrderReviewPolicy.skip', () {
-    test('drops only the offending reviews, counts them, applies the rest',
-        () {
+    test('drops only the offending reviews, counts them, applies the rest', () {
       final dolphin = DolphinSR(
           now: () => DateTime(2026, 1, 20),
           outOfOrderReviewPolicy: OutOfOrderReviewPolicy.skip);

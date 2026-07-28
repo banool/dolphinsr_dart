@@ -37,7 +37,8 @@ void main() {
     var review = Review(
         master: id, combination: combination, ts: today, rating: Rating.Easy);
 
-    expect(() => applyReview(state, review), throwsA(isA<UnknownCardException>()));
+    expect(
+        () => applyReview(state, review), throwsA(isA<UnknownCardException>()));
   });
 
   test(
@@ -85,8 +86,8 @@ void main() {
         combination: combination,
         consecutiveCorrect: 1,
         lastReviewed: today);
-    expect(state.cardStates[cardId.uniqueId],
-        equals(learningCardStateAfterApply));
+    expect(
+        state.cardStates[cardId.uniqueId], equals(learningCardStateAfterApply));
   });
 
   test(
@@ -111,8 +112,7 @@ void main() {
         consecutiveCorrect: 1,
         lastReviewed: today);
 
-    var processedCard =
-        state.cardStates[cardId.uniqueId] as LearningCardState?;
+    var processedCard = state.cardStates[cardId.uniqueId] as LearningCardState?;
     expect(processedCard, equals(learningCardStateAfterApply));
 
     var reviewC = Review(

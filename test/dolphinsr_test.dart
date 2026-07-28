@@ -32,8 +32,7 @@ void main() {
     final d = DolphinSR();
     expect(d.nextCard(), isNull);
 
-    var s =
-        const SummaryStatics(later: 0, due: 0, overdue: 0, learning: 0);
+    var s = const SummaryStatics(later: 0, due: 0, overdue: 0, learning: 0);
     expect(d.summary(), equals(s));
   });
 
@@ -78,8 +77,7 @@ void main() {
 
     d.addMasters([master, master2]);
 
-    var s =
-        SummaryStatics(later: 0, due: 0, overdue: 0, learning: 2);
+    var s = SummaryStatics(later: 0, due: 0, overdue: 0, learning: 2);
     expect(d.summary(), equals(s));
 
     var id3 = generateId();

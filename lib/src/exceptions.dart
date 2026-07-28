@@ -6,7 +6,8 @@
 /// must be applied in per-card chronological order; histories written with
 /// a misbehaving device clock can violate that.
 class OutOfOrderReviewException implements Exception {
-  const OutOfOrderReviewException(this.master, this.reviewTs, this.lastReviewed);
+  const OutOfOrderReviewException(
+      this.master, this.reviewTs, this.lastReviewed);
 
   final String? master;
   final DateTime? reviewTs;
