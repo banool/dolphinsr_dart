@@ -1,4 +1,6 @@
 ## [4.0.0] - 19/07/2026
+First release published to pub.dev, under the new package name `dolphinsr` (previously `dolphinsr_dart`). Import it as `package:dolphinsr/dolphinsr.dart`.
+
 Correctness, performance, and API overhaul (breaking).
 - Fix a TypeError crash when a card reaches the 365-day MAX_INTERVAL cap.
 - Fix inverted daysLate: late reviews now grow the next interval instead of shrinking it.
