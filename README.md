@@ -1,5 +1,5 @@
 [![pub package](https://img.shields.io/pub/v/dolphinsr.svg)](https://pub.dev/packages/dolphinsr)
-[![CI](https://github.com/banool/dolphinsr/actions/workflows/ci.yml/badge.svg)](https://github.com/banool/dolphinsr/actions/workflows/ci.yml)
+[![CI](https://github.com/banool/dolphinsr_dart/actions/workflows/ci.yml/badge.svg)](https://github.com/banool/dolphinsr_dart/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 # dolphinsr
@@ -74,7 +74,7 @@ void main() {
 }
 ```
 
-See [example/main.dart](https://github.com/banool/dolphinsr/blob/master/example/main.dart) for a fuller run through a review session.
+See [example/main.dart](https://github.com/banool/dolphinsr_dart/blob/master/example/main.dart) for a fuller run through a review session.
 
 ## License
 

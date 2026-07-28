@@ -1,8 +1,8 @@
 name: dolphinsr
 description: A spaced-repetition scheduling algorithm for Dart, based on Anki's SM-2 variant. Build flashcard and review systems for Flutter, web, or server.
 version: 4.0.0
-repository: https://github.com/banool/dolphinsr
-issue_tracker: https://github.com/banool/dolphinsr/issues
+repository: https://github.com/banool/dolphinsr_dart
+issue_tracker: https://github.com/banool/dolphinsr_dart/issues
 topics:
   - spaced-repetition
   - flashcards
