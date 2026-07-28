@@ -6,7 +6,7 @@
 
 A spaced-repetition scheduling algorithm for Dart. Use it to build [flashcard](https://en.wikipedia.org/wiki/Flashcard) and review systems — for Flutter, the web, or the server — that decide which card to show next and when.
 
-This is a maintained fork of [JobiJoba/dolphinsr_dart](https://github.com/JobiJoba/dolphhinsr_dart), itself a Dart port of yodaiken's JavaScript [dolphinsr](https://github.com/yodaiken/dolphinsr). It is published to pub.dev as `dolphinsr` and carries the correctness and performance fixes described in the [changelog](CHANGELOG.md). Bug reports and pull requests are welcome.
+`dolphinsr` began as [yodaiken's](https://github.com/yodaiken/dolphinsr) JavaScript spaced-repetition library and was ported to Dart by [JobiJoba](https://github.com/JobiJoba/dolphhinsr_dart). This fork picks up that work — published to pub.dev under the shorter name `dolphinsr` — with the correctness and performance fixes described in the [changelog](CHANGELOG.md). It is maintained on a best-effort basis, and issues and pull requests are welcome.
 
 ## Algorithm
 
