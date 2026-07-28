@@ -1,4 +1,4 @@
-import 'package:dolphinsr_dart/dolphinsr_dart.dart';
+import 'package:dolphinsr/dolphinsr.dart';
 
 void main() {
   final reviews = <Review>[];

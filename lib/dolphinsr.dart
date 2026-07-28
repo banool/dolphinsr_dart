@@ -1,4 +1,11 @@
-library dolphinsr_dart;
+/// A spaced-repetition scheduling algorithm for Dart, based on Anki's
+/// variant of the SM-2 algorithm. Use it to build flashcard and review
+/// systems for Flutter, web, or server apps.
+///
+/// The entry point is [DolphinSR]: register cards with
+/// [DolphinSR.addMasters], feed answers back with [DolphinSR.addReviews],
+/// and ask what to show next with [DolphinSR.nextCard].
+library;
 
 import 'dart:math' as math;
 

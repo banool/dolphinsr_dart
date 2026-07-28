@@ -1,6 +1,6 @@
 import 'dart:math' as math;
-import 'package:dolphinsr_dart/dolphinsr_dart.dart';
-import 'package:dolphinsr_dart/src/utils.dart';
+import 'package:dolphinsr/dolphinsr.dart';
+import 'package:dolphinsr/src/utils.dart';
 import 'package:test/test.dart';
 
 // Characterization tests: these pin down the library's current observable

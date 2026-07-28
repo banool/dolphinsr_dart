@@ -1,6 +1,6 @@
 import 'dart:math' as math;
-import 'package:dolphinsr_dart/src/models.dart';
-import 'package:dolphinsr_dart/src/utils.dart';
+import 'package:dolphinsr/src/models.dart';
+import 'package:dolphinsr/src/utils.dart';
 import 'package:test/test.dart';
 
 import 'dates.dart';

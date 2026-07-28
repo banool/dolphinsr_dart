@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'package:dolphinsr_dart/dolphinsr_dart.dart';
+import 'package:dolphinsr/dolphinsr.dart';
 import 'package:test/test.dart';
 import 'dates.dart';
 
