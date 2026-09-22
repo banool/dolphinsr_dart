@@ -29,6 +29,17 @@ class UnknownCardException implements Exception {
   String toString() => 'UnknownCardException: no card for master $master';
 }
 
+/// An operation referenced a master id that is not registered.
+class UnknownMasterException implements Exception {
+  const UnknownMasterException(this.master);
+
+  final String? master;
+
+  @override
+  String toString() =>
+      'UnknownMasterException: master $master is not registered';
+}
+
 /// addMasters received a master id that is already registered.
 class DuplicateMasterException implements Exception {
   const DuplicateMasterException(this.master);

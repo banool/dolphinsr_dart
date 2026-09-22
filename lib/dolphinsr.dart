@@ -99,6 +99,55 @@ class DolphinSR {
     _invalidateSchedule();
   }
 
+  /// Widen an already-registered master with more combinations, creating a
+  /// fresh card for each one that has no card state yet.
+  ///
+  /// A deck that gains a card type, or a persisted review history replayed
+  /// against a master set rebuilt without that card type, produces reviews for
+  /// a (master, combination) pair [addMasters] never created a card for —
+  /// [addReviews] then throws [UnknownCardException] for every one of them.
+  /// This is the supported way to close that gap: [addMasters] rejects a known
+  /// id with [DuplicateMasterException], and [removeFromMaster] would discard
+  /// the master's existing card states along with their schedules.
+  ///
+  /// Combinations the master already has are ignored and existing card states
+  /// are never replaced, so calling this repeatedly is safe. New cards are
+  /// appended, so they are served after the cards already registered (see
+  /// [addMasters] on why insertion order matters).
+  ///
+  /// Throws [UnknownMasterException] if no master is registered under
+  /// [masterId]; use [addMasters] for a master that does not exist yet.
+  void addCombinations(String masterId, List<Combination> combinations) {
+    final master = _masters[masterId];
+    if (master == null) {
+      throw UnknownMasterException(masterId);
+    }
+
+    final existing = master.combinations ?? const <Combination>[];
+    final added = <Combination>[];
+    for (final combination in combinations) {
+      if (!existing.contains(combination) && !added.contains(combination)) {
+        added.add(combination);
+      }
+    }
+    if (added.isEmpty) {
+      return;
+    }
+
+    _masters[masterId] = Master(
+        id: master.id,
+        fields: master.fields,
+        combinations: [...existing, ...added]);
+
+    for (final combination in added) {
+      final cardId =
+          CardId.fromCombination(combination: combination, master: masterId);
+      _state!.cardStates.putIfAbsent(cardId.uniqueId,
+          () => makeInitialCardState(id: masterId, combination: combination));
+    }
+    _invalidateSchedule();
+  }
+
   void addReviews(List<Review> reviews) {
     for (final review in reviews) {
       try {
