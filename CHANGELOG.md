@@ -1,3 +1,7 @@
+## [Unreleased]
+- New `addCombinations(masterId, combinations)` widens an already-registered master, creating a card for each combination it does not have yet. Previously there was no supported way to close that gap: `addMasters` rejects a known id with `DuplicateMasterException`, and `removeFromMaster` discards the master's existing card states, so a review for a (master, combination) pair that had no card left callers with `UnknownCardException`.
+- New `UnknownMasterException`, thrown by `addCombinations` when no master is registered under the given id.
+
 ## [4.0.0] - 19/07/2026
 First release published to pub.dev, under the new package name `dolphinsr` (previously `dolphinsr_dart`). Import it as `package:dolphinsr/dolphinsr.dart`.
 
