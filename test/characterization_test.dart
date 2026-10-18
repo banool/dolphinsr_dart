@@ -210,6 +210,21 @@ void main() {
           lastReviewed: t0);
       expect(calculateDueDate(noInterval), isNull);
     });
+
+    test('lapsed card is due when it was reviewed, not after its old interval',
+        () {
+      final reviewing = ReviewingCardState(
+          master: 'm',
+          combination: combo01(),
+          factor: 2500,
+          lapses: 0,
+          interval: 60,
+          lastReviewed: t0);
+      final lapsed = applyToCardState(
+          reviewing, t0.add(const Duration(days: 60)), Rating.Again);
+      expect(lapsed, isA<LapsedCardState>());
+      expect(calculateDueDate(lapsed), t0.add(const Duration(days: 60)));
+    });
   });
 
   group('computeCardsSchedule bucketing', () {
