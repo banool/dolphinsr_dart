@@ -1,4 +1,4 @@
-## [Unreleased]
+## [4.1.1] - 22/10/2026
 - Fix `dueDate` for lapsed cards. A card you got wrong kept its old interval, so its due date was weeks out while `nextCard()` was already serving it. It's now due straight away.
 
 ## [4.1.0] - 02/10/2026
