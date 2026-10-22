@@ -1,3 +1,6 @@
+## [Unreleased]
+- Fix `dueDate` for lapsed cards. A card you got wrong kept its old interval, so its due date was weeks out while `nextCard()` was already serving it. It's now due straight away.
+
 ## [4.1.0] - 02/10/2026
 - New `addCombinations(masterId, combinations)` widens an already-registered master, creating a card for each combination it does not have yet. Previously there was no supported way to close that gap: `addMasters` rejects a known id with `DuplicateMasterException`, and `removeFromMaster` discards the master's existing card states, so a review for a (master, combination) pair that had no card left callers with `UnknownCardException`.
 - New `UnknownMasterException`, thrown by `addCombinations` when no master is registered under the given id.
