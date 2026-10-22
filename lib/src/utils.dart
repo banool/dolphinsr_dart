@@ -80,8 +80,9 @@ double constrainWithin(double min, num max, double n) {
 /// calendar days rather than 24h blocks and so stays stable across DST.
 ///
 /// A lapsed card is due as soon as it was reviewed, matching the schedule,
-/// which serves it from the learning bucket. It keeps its old interval only
-/// for when it goes back to reviewing.
+/// which serves it from the learning bucket. The interval it still carries
+/// is the one it lapsed from, and plays no part from here on: when the card
+/// goes back to reviewing it starts over from the initial interval.
 DateTime? calculateDueDate(CardState state) {
   final lastReviewed = state.lastReviewed;
   if (state.mode == 'lapsed') {
